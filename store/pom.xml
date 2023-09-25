@@ -32,5 +32,10 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

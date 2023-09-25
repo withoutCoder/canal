@@ -53,42 +53,35 @@ public class CanalServerWithNetty extends AbstractCanalLifeCycle implements Cana
     }
 
     public void start() {
+        // 1. 超类 start
         super.start();
-
+        // 2. 先启动嵌入式 canal 服务
         if (!embeddedServer.isStart()) {
             embeddedServer.start();
         }
-
-        this.bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(Executors.newCachedThreadPool(),
-            Executors.newCachedThreadPool()));
-        /*
-         * enable keep-alive mechanism, handle abnormal network connection
-         * scenarios on OS level. the threshold parameters are depended on OS.
-         * e.g. On Linux: net.ipv4.tcp_keepalive_time = 300
-         * net.ipv4.tcp_keepalive_probes = 2 net.ipv4.tcp_keepalive_intvl = 30
-         */
+        // 3.初始化 bootstrap
+        // 参数 NioServerSocketChannelFactory 也是 Netty 的 API，接受2个线程池参数，第一个线程池是 Accept 线程池，第二个线程池是 worker 线程池，Accept 线程池接收到 client 连接请求后，会将代表 client 的对象转发给 worker 线程池处理。
+        this.bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
+        // 4.tcp keep alive
         bootstrap.setOption("child.keepAlive", true);
-        /*
-         * optional parameter.
-         */
+        // 5. 禁用 tcp Nagle 算法，降低延迟
         bootstrap.setOption("child.tcpNoDelay", true);
-
-        // 构造对应的pipeline
+        // 6. 构造对应的pipeline
         bootstrap.setPipelineFactory(() -> {
+            // 设置 pipelines 处理器，按照顺序处理接收到的客户端请求
             ChannelPipeline pipelines = Channels.pipeline();
+            // 处理编码、解码、解析网络传入二进制流
             pipelines.addLast(FixedHeaderFrameDecoder.class.getName(), new FixedHeaderFrameDecoder());
             // support to maintain child socket channel.
-            pipelines.addLast(HandshakeInitializationHandler.class.getName(),
-                new HandshakeInitializationHandler(childGroups));
-            pipelines.addLast(ClientAuthenticationHandler.class.getName(),
-                new ClientAuthenticationHandler(embeddedServer));
-
+            pipelines.addLast(HandshakeInitializationHandler.class.getName(), new HandshakeInitializationHandler(childGroups));
+            // 身份验证
+            pipelines.addLast(ClientAuthenticationHandler.class.getName(), new ClientAuthenticationHandler(embeddedServer));
+            // 设置 SessionHandler 用于处理客户端请求
             SessionHandler sessionHandler = new SessionHandler(embeddedServer);
             pipelines.addLast(SessionHandler.class.getName(), sessionHandler);
             return pipelines;
         });
-
-        // 启动
+        // 7. 启动 netty 服务器
         if (StringUtils.isNotEmpty(ip)) {
             this.serverChannel = bootstrap.bind(new InetSocketAddress(this.ip, this.port));
         } else {

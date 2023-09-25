@@ -16,20 +16,4 @@ public class CanalStoreException extends CanalException {
         super(errorCode);
     }
 
-    public CanalStoreException(String errorCode, Throwable cause){
-        super(errorCode, cause);
-    }
-
-    public CanalStoreException(String errorCode, String errorDesc){
-        super(errorCode + ":" + errorDesc);
-    }
-
-    public CanalStoreException(String errorCode, String errorDesc, Throwable cause){
-        super(errorCode + ":" + errorDesc, cause);
-    }
-
-    public CanalStoreException(Throwable cause){
-        super(cause);
-    }
-
 }

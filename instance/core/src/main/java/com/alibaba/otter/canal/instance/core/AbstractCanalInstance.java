@@ -32,15 +32,14 @@ public class AbstractCanalInstance extends AbstractCanalLifeCycle implements Can
 
     protected Long                                   canalId;                                                      // 和manager交互唯一标示
     protected String                                 destination;                                                  // 队列名字
-    protected CanalEventStore<Event>                 eventStore;                                                   // 有序队列
 
-    protected CanalEventParser                       eventParser;                                                  // 解析对应的数据信息
-    protected CanalEventSink<List<CanalEntry.Entry>> eventSink;                                                    // 链接parse和store的桥接器
+    protected CanalEventStore<Event>                 eventStore;                                                   // 有序队列,数据存储，供 client 消费
+    protected CanalEventParser                       eventParser;                                                  // 解析对应的数据信息，数据源接入，模拟 slave 协议和 master 进行交互，协议解析
+    protected CanalEventSink<List<CanalEntry.Entry>> eventSink;                                                    // 链接parse和store的桥接器，进行数据过滤，加工，分发的工作
     protected CanalMetaManager                       metaManager;                                                  // 消费信息管理器
+
     protected CanalAlarmHandler                      alarmHandler;                                                 // alarm报警机制
     protected CanalMQConfig                          mqConfig;                                                     // mq的配置
-
-
 
     @Override
     public boolean subscribeChange(ClientIdentity identity) {

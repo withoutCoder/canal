@@ -51,13 +51,15 @@ public class ClientAuthenticationHandler extends SimpleChannelHandler {
         switch (packet.getVersion()) {
             case SUPPORTED_VERSION:
             default:
+                // 首先，它从网络包中解析出客户端发来的身份验证信息，这些信息通常包括用户名、密码、订阅的目的地（destination）、客户端 ID 等。
                 final ClientAuth clientAuth = ClientAuth.parseFrom(packet.getBody());
+                // 检查客户端的身份验证是否成功
                 if (seed == null) {
                     byte[] errorBytes = NettyUtils.errorPacket(400,
                         MessageFormatter.format("auth failed for seed is null", clientAuth.getUsername()).getMessage());
                     NettyUtils.write(ctx.getChannel(), errorBytes, null);
                 }
-
+                // 检查客户端的身份验证是否成功
                 if (!embeddedServer.auth(clientAuth.getUsername(), clientAuth.getPassword().toStringUtf8(), seed)) {
                     byte[] errorBytes = NettyUtils.errorPacket(400,
                         MessageFormatter.format("auth failed for user:{}", clientAuth.getUsername()).getMessage());
@@ -65,11 +67,9 @@ public class ClientAuthenticationHandler extends SimpleChannelHandler {
                 }
 
                 // 如果存在订阅信息
-                if (StringUtils.isNotEmpty(clientAuth.getDestination())
-                    && StringUtils.isNotEmpty(clientAuth.getClientId())) {
-                    ClientIdentity clientIdentity = new ClientIdentity(clientAuth.getDestination(),
-                        Short.valueOf(clientAuth.getClientId()),
-                        clientAuth.getFilter());
+                if (StringUtils.isNotEmpty(clientAuth.getDestination()) && StringUtils.isNotEmpty(clientAuth.getClientId())) {
+                    // 客户端订阅信息
+                    ClientIdentity clientIdentity = new ClientIdentity(clientAuth.getDestination(), Short.valueOf(clientAuth.getClientId()), clientAuth.getFilter());
                     try {
                         MDC.put("destination", clientIdentity.getDestination());
                         embeddedServer.subscribe(clientIdentity);

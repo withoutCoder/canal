@@ -25,15 +25,8 @@ public abstract class AbstractCanalStoreScavenge extends AbstractCanalLifeCycle 
     protected boolean          onSchedule       = false;
     protected String           scavengeSchedule = null;
 
-    public void scavenge() {
-        Position position = getLatestAckPosition(destination);
-        cleanUntil(position);
-    }
-
     /**
      * 找出该destination中可被清理掉的position位置
-     * 
-     * @param destination
      */
     private Position getLatestAckPosition(String destination) {
         List<ClientIdentity> clientIdentitys = canalMetaManager.listAllSubscribeInfo(destination);
@@ -95,10 +88,6 @@ public abstract class AbstractCanalStoreScavenge extends AbstractCanalLifeCycle 
 
     public void setOnSchedule(boolean onSchedule) {
         this.onSchedule = onSchedule;
-    }
-
-    public String getScavengeSchedule() {
-        return scavengeSchedule;
     }
 
     public void setScavengeSchedule(String scavengeSchedule) {

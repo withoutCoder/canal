@@ -58,7 +58,9 @@ public class SessionHandler extends SimpleChannelHandler {
         Packet packet = Packet.parseFrom(buffer.readBytes(buffer.readableBytes()).array());
         ClientIdentity clientIdentity = null;
         try {
+            // 根据不同 packet type，将任务委托给 embeddedServer 处理
             switch (packet.getType()) {
+                // 订阅
                 case SUBSCRIPTION:
                     Sub sub = Sub.parseFrom(packet.getBody());
                     if (StringUtils.isNotEmpty(sub.getDestination()) && StringUtils.isNotEmpty(sub.getClientId())) {
@@ -96,6 +98,7 @@ public class SessionHandler extends SimpleChannelHandler {
                                 (short) 401));
                     }
                     break;
+                // 取消订阅
                 case UNSUBSCRIPTION:
                     Unsub unsub = Unsub.parseFrom(packet.getBody());
                     if (StringUtils.isNotEmpty(unsub.getDestination()) && StringUtils.isNotEmpty(unsub.getClientId())) {
@@ -126,6 +129,7 @@ public class SessionHandler extends SimpleChannelHandler {
                                 (short) 401));
                     }
                     break;
+                // 获取 binlog 流
                 case GET:
                     Get get = CanalPacket.Get.parseFrom(packet.getBody());
                     if (StringUtils.isNotEmpty(get.getDestination()) && StringUtils.isNotEmpty(get.getClientId())) {
@@ -247,6 +251,7 @@ public class SessionHandler extends SimpleChannelHandler {
                                 (short) 401));
                     }
                     break;
+                // 客户端 ack
                 case CLIENTACK:
                     ClientAck ack = CanalPacket.ClientAck.parseFrom(packet.getBody());
                     MDC.put("destination", ack.getDestination());
@@ -286,6 +291,7 @@ public class SessionHandler extends SimpleChannelHandler {
                                 (short) 401));
                     }
                     break;
+                // 客户端消费失败回滚
                 case CLIENTROLLBACK:
                     ClientRollback rollback = CanalPacket.ClientRollback.parseFrom(packet.getBody());
                     MDC.put("destination", rollback.getDestination());
@@ -317,6 +323,7 @@ public class SessionHandler extends SimpleChannelHandler {
                                 (short) 401));
                     }
                     break;
+                // 无处理
                 default:
                     byte[] errorBytes = NettyUtils.errorPacket(400,
                         MessageFormatter.format("packet type={} is NOT supported!", packet.getType()).getMessage());
